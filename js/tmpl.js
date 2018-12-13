@@ -17,25 +17,57 @@
 ;(function ($) {
   'use strict'
   var tmpl = function (str, data) {
-    var f = !/[^\w\-.:]/.test(str)
-      ? (tmpl.cache[str] = tmpl.cache[str] || tmpl(tmpl.load(str)))
-      : new Function( // eslint-disable-line no-new-func
+
+    let isNormalName = !/[^\w\-.:]/.test(str)
+    // if(str === tmpl.preloader){
+    //   isNormalName = true;
+    // }
+
+
+    let f
+    if (isNormalName) {
+      let loadedValue = tmpl.load(str);
+      if(typeof (loadedValue) == 'function'){
+        f = tmpl.cache[tmpl.preloader] = tmpl.cache[tmpl.preloader] || tmpl(tmpl.preloader(), {})
+        let calbc = function (readyTemplate) {
+          f = tmpl.cache[str] = tmpl.cache[str] || tmpl(readyTemplate);
+        }
+        loadedValue(calbc);
+        // set template from tmpl.preloader
+
+        tmpl(tmpl.preloader, data)
+      } else {
+        f = tmpl.cache[str] = tmpl.cache[str] || tmpl(loadedValue); // get templateBody, return function from data
+      }
+
+    } else {
+      f = new Function( // eslint-disable-line no-new-func
         tmpl.arg + ',tmpl',
         'var _e=tmpl.encode' +
-            tmpl.helper +
-            ",_s='" +
-            str.replace(tmpl.regexp, tmpl.func) +
-            "';return _s;"
-      )
+        tmpl.helper +
+        ",_s='" +
+        str.replace(tmpl.regexp, tmpl.func) +
+        "';return _s;"
+      );
+    }
     return data
       ? f(data, tmpl)
-      : function (data) {
+      : function (data) { // data is undefined here
         return f(data, tmpl)
       }
   }
   tmpl.cache = {}
   tmpl.load = function (id) {
-    return document.getElementById(id).innerHTML
+    // return document.getElementById(id).innerHTML
+    return function (accept, reject) {
+      setTimeout(function () {
+        accept('lold');
+      }, 20000)
+    }
+
+  }
+  tmpl.preloader = function(){
+    return "LOADING";
   }
   tmpl.regexp = /([\s'\\])(?!(?:[^{]|\{(?!%))*%\})|(?:\{%(=|#)([\s\S]+?)%\})|(\{%)|(%\})/g
   tmpl.func = function (s, p1, p2, p3, p4, p5) {

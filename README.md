@@ -1,5 +1,12 @@
 # JavaScript Templates
 
+TODO list:
+- [ ] Possibility to load templates async, accept value is template name(as it is), return value is `string` or `(accept, reject)->{}`), error handling: fail all, fail fast
+- [ ] Preloader while templates are loading (preloader(templateName) -> {}), only sync!
+- [ ] Tests coverage
+- [ ] Branches 'human-readable' and 'usual one-liner'
+- [ ] Documentation update
+
 ## Demo
 [JavaScript Templates Demo](https://blueimp.github.io/JavaScript-Templates/)
 

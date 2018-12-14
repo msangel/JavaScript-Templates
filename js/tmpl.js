@@ -39,17 +39,31 @@ f(data).then(function (text) {
 ;(function ($) {
   'use strict'
   var tmpl = function (str, data) {
-    let f = function () {
-      return new Promise(function (accept, reject) {
+    let f = function (data1) {
 
-      })
+      let isNormalName = !/[^\w\-.:]/.test(str);
+      if(isNormalName){
+        let loadedValue = tmpl.load(str)
+        return Promise.resolve(tmpl(loadedValue)(data1));
+      } else {
+        return new Promise(function (accept, reject) {
+          let localFunction = new Function( // eslint-disable-line no-new-func
+              tmpl.arg + ',tmpl',
+              'var _e=tmpl.encode' +
+              tmpl.helper +
+              ",_s='" +
+              str.replace(tmpl.regexp, tmpl.func) +
+              "'; return _s;")
+          accept(localFunction(data1, tmpl));
+        })
+      }
     }
 
     if(data){
-      return f(data, tmpl)
+      return f(data)
     } else {
       return function (data) {
-        return f(data, tmpl);
+        return f(data);
       }
     }
   }
@@ -97,6 +111,7 @@ f(data).then(function (text) {
 
   tmpl.cache = {}
   tmpl.load = function (id) {
+    console.log('looking id:', id);
     return document.getElementById(id).innerHTML
     /*return function (accept, reject) {
       setTimeout(function () {

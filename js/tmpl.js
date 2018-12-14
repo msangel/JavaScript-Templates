@@ -39,6 +39,22 @@ f(data).then(function (text) {
 ;(function ($) {
   'use strict'
   var tmpl = function (str, data) {
+    let f = function () {
+      return new Promise(function (accept, reject) {
+
+      })
+    }
+
+    if(data){
+      return f(data, tmpl)
+    } else {
+      return function (data) {
+        return f(data, tmpl);
+      }
+    }
+  }
+
+  var tmplsas = function (str, data) {
     return function () {
       return new Promise(function (resolve, reject) {
         let isNormalName = !/[^\w\-.:]/.test(str)
@@ -77,6 +93,8 @@ f(data).then(function (text) {
       })
     }
   }
+
+
   tmpl.cache = {}
   tmpl.load = function (id) {
     return document.getElementById(id).innerHTML

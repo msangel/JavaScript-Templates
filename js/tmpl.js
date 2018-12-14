@@ -38,82 +38,43 @@ f(data).then(function (text) {
 */
 ;(function ($) {
   'use strict'
-  var tmpl = function (str, data) {
-    let f = function (data1) {
-      let isNormalName = !/[^\w\-.:]/.test(str);
-      if(isNormalName){
-        let loadedValue = tmpl.load(str)
-        if (typeof (loadedValue) === 'function') {
+  var tmpl = function (name, data) {
+      let f = function (data1) {
+          let loadedValue = tmpl.load(name)
+          if (typeof (loadedValue) === 'function') {
+              return new Promise(function (acc1, rej1) {
+                  loadedValue(function (loadedTmplt) {
+                      tmpl.tmplFromTemplate(loadedTmplt, data1).then(acc1);
+                  })
+              })
+          } else {
+              return Promise.resolve(tmpl.tmplFromTemplate(loadedValue, data1));
+          }
+      }
 
-          return new Promise(function (acc1, rej1) {
-            loadedValue(function (loadedTmplt) {
-              acc1(tmpl(loadedTmplt)(data1));
-            })
-          })
-        } else {
-          return Promise.resolve(tmpl(loadedValue)(data1));
-        }
+      if(data){
+          return f(data)
       } else {
-        return new Promise(function (accept, reject) {
-          let localFunction = new Function( // eslint-disable-line no-new-func
-              tmpl.arg + ',tmpl',
-              'var _e=tmpl.encode' +
-              tmpl.helper +
-              ",_s='" +
-              str.replace(tmpl.regexp, tmpl.func) +
-              "'; return _s;")
-          accept(localFunction(data1, tmpl));
-        })
+          return function (data) {
+              return f(data);
+          }
       }
-    }
-
-    if(data){
-      return f(data)
-    } else {
-      return function (data) {
-        return f(data);
-      }
-    }
   }
 
-  var tmplsas = function (str, data) {
-    return function () {
-      return new Promise(function (resolve, reject) {
-        let isNormalName = !/[^\w\-.:]/.test(str)
-        let f
-        if (isNormalName) {
-          let loadedValue = tmpl.load(str)
-          if (typeof (loadedValue) === 'function') {
-            let calbc = function (readyTemplate) {
-              f = tmpl.cache[str] = tmpl.cache[str] || tmpl(readyTemplate)
-            }
-            loadedValue(calbc)
-          } else {
-            f = tmpl.cache[str] = tmpl.cache[str] || tmpl(loadedValue) // get templateBody, return function from data
-          }
-        } else {
-          console.log('function created');
-          f = function (data1, tmpl1){
-            return new Promise(function (res1, rej1) {
+    tmpl.tmplFromTemplate = function (template, data) {
+      let f = function (data1) {
+          return new Promise(function (accept, reject) {
               let localFunction = new Function( // eslint-disable-line no-new-func
                   tmpl.arg + ',tmpl',
                   'var _e=tmpl.encode' +
                   tmpl.helper +
                   ",_s='" +
-                  str.replace(tmpl.regexp, tmpl.func) +
-                  "';return _s;"
-              )
-              res1(localFunction(data1, tmpl1));
-            })
-          }
-
-        }
-
-        data ? f(data, tmpl).then(resolve) : function (data) {
-          return f(data, tmpl).then(resolve);
-        }
-      })
-    }
+                  template.replace(tmpl.regexp, tmpl.func) +
+                  "'; return _s;")
+              accept(localFunction(data1, tmpl));
+          })
+      }
+      return f(data)
   }
 
 

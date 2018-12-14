@@ -15,7 +15,6 @@
 /* global define */
 /*
 
-
 tmpl("tmpl-demo", data).then(function (text) {
     document.getElementById("result").innerHTML = text;
 })
@@ -28,64 +27,121 @@ f(data).then(function (text) {
     document.getElementById("result").innerHTML = text;
 })
 
-
-
-
-
-
-
-
 */
 ;(function ($) {
   'use strict'
-  var tmpl = function (name, data) {
-      let f = function (data1) {
-          let loadedValue = tmpl.load(name)
-          if (typeof (loadedValue) === 'function') {
-              return new Promise(function (acc1, rej1) {
-                  loadedValue(function (loadedTmplt) {
-                      tmpl.tmplFromTemplate(loadedTmplt, data1).then(acc1);
-                  })
-              })
-          } else {
-              return Promise.resolve(tmpl.tmplFromTemplate(loadedValue, data1));
-          }
-      }
 
-      if(data){
-          return f(data)
+  var Bus = function (factory) {
+    var me = this
+    me.factory = factory || function (name) {
+      return Promise.reject(new Error('must be implementing'))
+    }
+    me.ev = {}
+    me.cache = {}
+    me.subscribe = function (name) {
+      if (me.cache[name]) {
+        return Promise.resolve(me.cache[name])
       } else {
-          return function (data) {
-              return f(data);
-          }
+        var accept
+        var f = function (data) {
+          me.cache[name] = data
+          accept(data)
+        }
+        if (typeof me.ev[name] === 'undefined') {
+          startLoading(name)
+        }
+        me.ev[name] = me.ev[name] || []
+        me.ev[name].push(f)
+        return new Promise(function (resolve, reject) {
+          accept = resolve
+        })
       }
+    }
+    var publish = function (name, template) {
+      me.ev[name] = me.ev[name] || []
+      for (let i = 0; i < me.ev[name].length; i++) {
+        me.ev[name][i](template)
+      }
+      me.ev[name] = []
+    }
+
+    me.loadingTimeout = 5000
+    me.loadingTimeoutHandler = function (accept, reject, name) {
+      reject(new Error('loading of ' + name + ' takes too long'))
+    }
+
+    var startLoading = function (name) {
+      var timeoutHandler
+      Promise.race([
+        me.factory(name),
+        new Promise(function (resolve, reject) {
+          timeoutHandler = setTimeout(function () {
+            me.loadingTimeoutHandler(resolve, reject, name)
+          }, me.loadingTimeout)
+        })
+      ]).then(function (template) {
+        if (timeoutHandler) {
+          clearTimeout(timeoutHandler)
+        }
+        publish(name, template)
+      })
+    }
   }
 
-    tmpl.tmplFromTemplate = function (template, data) {
-      let f = function (data1) {
-          return new Promise(function (accept, reject) {
-              let localFunction = new Function( // eslint-disable-line no-new-func
-                  tmpl.arg + ',tmpl',
-                  'var _e=tmpl.encode' +
-                  tmpl.helper +
-                  ",_s='" +
-                  template.replace(tmpl.regexp, tmpl.func) +
-                  "'; return _s;")
-              accept(localFunction(data1, tmpl));
-          })
+  var tmpl = function (template, data) {
+    var localFunction = new Function( // eslint-disable-line no-new-func
+      tmpl.arg + ',tmpl',
+      'var _e=tmpl.encode' +
+        tmpl.helper +
+        ",_s='" +
+        template.replace(tmpl.regexp, tmpl.func) +
+        "'; return _s;"
+    )
+
+    if (data) {
+      return Promise.resolve(localFunction(data, tmpl))
+    } else {
+      return function (dat) {
+        return Promise.resolve(localFunction(dat, tmpl))
       }
+    }
+  }
+
+  tmpl.bus = new Bus(function (name) {
+    var loadedValue = tmpl.load(name)
+    return new Promise(function (resolve, reject) {
+      if (typeof loadedValue === 'function') {
+        loadedValue().then(resolve).catch(reject)
+      } else {
+        resolve(loadedValue)
+      }
+    })
+  })
+
+  tmpl.byName = function (name, data) {
+    var f = function (data1) {
+      return tmpl.bus.subscribe(name).then(function (template) {
+        return Promise.resolve(tmpl(template, data1))
+      })
+    }
+    if (data) {
       return f(data)
+    } else {
+      return function (data) {
+        return f(data)
+      }
+    }
   }
 
-
-  tmpl.cache = {}
   tmpl.load = function (id) {
-    console.log('looking id:', id);
+    console.log('looking id:', id)
     return document.getElementById(id).innerHTML
-    /*return function (accept, reject) {
-      setTimeout(function () {
+    /* return function (done, fail) {
+      return new Promise(function(){
+     setTimeout(function () {
         accept('lold')
       }, 20000)
+      })
     }
     */
   }

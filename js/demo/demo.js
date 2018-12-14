@@ -23,7 +23,7 @@
   function renderError (title, error) {
     resultNode.innerHTML = tmpl(
       'tmpl-error',
-      {title: title, error: error}
+      { title: title, error: error }
     )
   }
 

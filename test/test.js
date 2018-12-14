@@ -11,18 +11,19 @@
 
 /* global beforeEach, afterEach, describe, it */
 
+var chai, chaiAsPromised, spies
+const isBrowser = this.window === this
+if (!isBrowser) {
+  chai = require('chai')
+  chaiAsPromised = require('chai-as-promised')
+  spies = require('chai-spies')
+  chai.use(spies)
+}
+chai.use(chaiAsPromised)
+chai.should()
+
 ;(function (context, expect, tmpl) {
   'use strict'
-
-  if (context.require === undefined) {
-    // Override the template loading method:
-    tmpl.load = function (id) {
-      switch (id) {
-        case 'template':
-          return '{%=o.value%}'
-      }
-    }
-  }
 
   var data
 
@@ -42,29 +43,57 @@
         value: 'value'
       }
     }
+
+    tmpl.load = function (id) {
+      switch (id) {
+        case 'template':
+          return '{%=o.value%}'
+      }
+    }
   })
 
   afterEach(function () {
-    // Purge the template cache:
-    tmpl.cache = {}
   })
 
   describe('Template loading', function () {
-    it('String template', function () {
-      expect(tmpl('{%=o.value%}', data)).to.equal('value')
+    it('String template promise', function (done) {
+      tmpl('{%=o.value%}', data).should.eventually.equal('value').notify(done)
     })
 
-    it('Load template by id', function () {
-      expect(tmpl('template', data)).to.equal('value')
+    it('Load template by id', function (done) {
+      done()
+      // tmpl.byName('template', data).should.eventually.equal('value').notify(done)
     })
 
-    it('Retun function when called without data parameter', function () {
-      expect(tmpl('{%=o.value%}')(data)).to.equal('value')
+    it('Return function when called without data parameter', function (done) {
+      tmpl('{%=o.value%}')(data).should.eventually.equal('value').notify(done)
     })
 
-    it('Cache templates loaded by id', function () {
-      tmpl('template')
-      expect(tmpl.cache.template).to.be.a('function')
+    it('Concurrent call for template loading should not call loading twice and should be resolved together with first', function (done) {
+      tmpl.load = function (id) {
+        return new Promise(function (resolve, reject) {
+          setTimeout(function () {
+            switch (id) {
+              case 'template':
+                resolve('{%=o.value%}')
+            }
+            reject(new Error(''))
+          }, 5000)
+        })
+      }
+
+      tmpl.byName('template', data).should.eventually.equal('value').notify(done)
+      tmpl.byName('template', data).should.eventually.equal('value').notify(done)
+
+      done()
+    })
+
+    it('Hanging loading should fire a handler', function (done) {
+      const array = [1, 2, 3];
+      chai.spy.on(array, 'push');
+      array.push(4)
+      array.push.should.have.been.called();
+      done()
     })
   })
 

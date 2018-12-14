@@ -1,9 +1,18 @@
 # JavaScript Templates
 
 TODO list:
-- [ ] Possibility to load templates async, error handling: fail all, fail fast
+- [x] Possibility to load templates sync and async, return value is Promise or carrying function(that return Promise)
+- [x] timeout for template loading
+- [x] customisable templateLoadingTimeoutHandler function
+- [x] the cache have no sense
+- [ ] error handling: fail all, fail fast
 - [ ] Tests coverage
 - [ ] Documentation update
+
+ci locally:
+trevor
+
+[![Build Status](https://travis-ci.org/msangel/JavaScript-Templates.svg?branch=master)](https://travis-ci.org/msangel/JavaScript-Templates)
 
 ## Demo
 [JavaScript Templates Demo](https://blueimp.github.io/JavaScript-Templates/)

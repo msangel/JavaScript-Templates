@@ -44,6 +44,7 @@ f(data).then(function (text) {
       if(isNormalName){
         let loadedValue = tmpl.load(str)
         if (typeof (loadedValue) === 'function') {
+
           return new Promise(function (acc1, rej1) {
             loadedValue(function (loadedTmplt) {
               acc1(tmpl(loadedTmplt)(data1));

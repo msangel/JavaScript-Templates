@@ -9,8 +9,37 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
+<p>Result:</p>
+<div id="result"></div>
 <script src="tmpl.js"></script>
-
+<script type="text/x-tmpl" id="tmpl-demo">
+<h3>{%=o.title%}</h3>
+<p>Released under the
+<a href="{%=o.license.url%}">{%=o.license.name%}</a>.</p>
+<h4>Features</h4>
+<ul>
+{% for (var i=0; i<o.features.length; i++) { %}
+    <li>{%=o.features[i]%}</li>
+{% } %}
+</ul>
+</script>
+<script>
+    var data = {
+        "title": "JavaScript Templates",
+        "license": {
+            "name": "MIT license",
+            "url": "https://opensource.org/licenses/MIT"
+        },
+        "features": [
+            "lightweight & fast",
+            "powerful",
+            "zero dependencies"
+        ]
+    };
+    // tmpl("tmpl-demo", data).then(function (text) {
+    //     document.getElementById("result").innerHTML = text;
+    // })
+</script>
 
 </body>
 </html>

@@ -2,7 +2,7 @@
 
 TODO list:
 - [ ] Possibility to load templates async, accept value is template name(as it is), return value is `string` or `(accept, reject)->{}`), error handling: fail all, fail fast
-- [ ] Preloader while templates are loading (preloader(templateName) -> {}), only sync!
+- [ ] Return value is promise. Let the user decide own what to do while its loading template. No more plain out.
 - [ ] Tests coverage
 - [ ] Branches 'human-readable' and 'usual one-liner'
 - [ ] Documentation update

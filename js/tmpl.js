@@ -40,11 +40,18 @@ f(data).then(function (text) {
   'use strict'
   var tmpl = function (str, data) {
     let f = function (data1) {
-
       let isNormalName = !/[^\w\-.:]/.test(str);
       if(isNormalName){
         let loadedValue = tmpl.load(str)
-        return Promise.resolve(tmpl(loadedValue)(data1));
+        if (typeof (loadedValue) === 'function') {
+          return new Promise(function (acc1, rej1) {
+            loadedValue(function (loadedTmplt) {
+              acc1(tmpl(loadedTmplt)(data1));
+            })
+          })
+        } else {
+          return Promise.resolve(tmpl(loadedValue)(data1));
+        }
       } else {
         return new Promise(function (accept, reject) {
           let localFunction = new Function( // eslint-disable-line no-new-func

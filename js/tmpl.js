@@ -30,7 +30,8 @@ f(data).then(function (text) {
 */
 ;(function ($) {
   'use strict'
-
+   // https://60devs.com/simple-way-to-manage-local-node-module-using-npm-link.html
+    // https://www.matteoagosti.com/blog/2013/02/24/writing-javascript-modules-for-both-browser-and-node/
   var Bus = function (factory) {
     var me = this
     me.factory = factory || function (name) {

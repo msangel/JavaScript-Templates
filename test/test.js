@@ -78,15 +78,59 @@ chai.should()
                 resolve('{%=o.value%}')
             }
             reject(new Error(''))
-          }, 5000)
+          }, 10)
+        }).then(function (template) {
+            done()
+            return Promise.resolve(template)
+        }).catch(function (error) {
+            done(error)
         })
       }
 
-      tmpl.byName('template', data).should.eventually.equal('value').notify(done)
-      tmpl.byName('template', data).should.eventually.equal('value').notify(done)
+      chai.spy.on(tmpl, 'load');
 
-      done()
+      tmpl.byName('template', data)
+      tmpl.byName('template', data)
+      tmpl.load.should.have.been.called.once
     })
+
+      it('If load function return undefined value the error should be visible', function (done) {
+          tmpl.load = function (id) {
+              return function () {
+                  return new Promise(function (resolve, reject) {
+                      setTimeout(function () {
+                          switch (id) {
+                              case 'template':
+                                  resolve('{%=o.value%}')
+                          }
+                          reject(new Error(''))
+                      }, 10)
+                  }).then(function (template) {
+                      return;
+                  })
+              }
+          }
+
+          tmpl.byName('template', data).should.eventually.rejectedWith(/template is undefined/).notify(done)
+      })
+
+      it('If load function return Promise but not function the error should be visible', function (done) {
+          tmpl.load = function (id) {
+              return new Promise(function (resolve, reject) {
+                  setTimeout(function () {
+                      switch (id) {
+                          case 'template':
+                              resolve('{%=o.value%}')
+                      }
+                      reject(new Error(''))
+                  }, 10)
+              })
+          }
+
+          tmpl.byName('template', data).should.eventually.rejectedWith(/function should not return Promise itself/).notify(done)
+      })
+
+
 
     it('Hanging loading should fire a handler', function (done) {
       const array = [1, 2, 3];

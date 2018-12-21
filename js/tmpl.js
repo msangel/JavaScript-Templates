@@ -39,6 +39,8 @@ f(data).then(function (text) {
     me.ev = {}
     me.cache = {}
     me.subscribe = function (name) {
+      console.log('subscribe on: ', name)
+      console.log('me.cache[name]: ', me.cache[name])
       if (me.cache[name]) {
         return Promise.resolve(me.cache[name])
       } else {
@@ -89,6 +91,7 @@ f(data).then(function (text) {
   }
 
   var tmpl = function (template, data) {
+    console.log('template', template)
     var localFunction = new Function( // eslint-disable-line no-new-func
       tmpl.arg + ',tmpl',
       'var _e=tmpl.encode' +
@@ -121,6 +124,12 @@ f(data).then(function (text) {
   tmpl.byName = function (name, data) {
     var f = function (data1) {
       return tmpl.bus.subscribe(name).then(function (template) {
+        if(typeof template === "undefined"){
+          return Promise.reject(new Error("Template is undefined, please make sure your load function du return either string, either function that return promise"))
+        } else if (typeof template.then === 'function') {
+          // probably a promise
+          return Promise.reject(new Error("Load function should not return Promise itself. It should return function that return Promise."));
+        }
         return Promise.resolve(tmpl(template, data1))
       })
     }

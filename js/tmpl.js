@@ -126,9 +126,6 @@ f(data).then(function (text) {
       return tmpl.bus.subscribe(name).then(function (template) {
         if(typeof template === "undefined"){
           return Promise.reject(new Error("Template is undefined, please make sure your load function du return either string, either function that return promise"))
-        } else if (typeof template.then === 'function') {
-          // probably a promise
-          return Promise.reject(new Error("Load function should not return Promise itself. It should return function that return Promise."));
         }
         return Promise.resolve(tmpl(template, data1))
       })

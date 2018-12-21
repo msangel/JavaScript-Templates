@@ -142,13 +142,12 @@ f(data).then(function (text) {
   tmpl.load = function (id) {
     console.log('looking id:', id)
     return document.getElementById(id).innerHTML
-    /* return function (done, fail) {
-      return new Promise(function(){
+    /*
+    return new Promise(function(){
      setTimeout(function () {
         accept('lold')
       }, 20000)
       })
-    }
     */
   }
   tmpl.regexp = /([\s'\\])(?!(?:[^{]|\{(?!%))*%\})|(?:\{%(=|#)([\s\S]+?)%\})|(\{%)|(%\})/g
